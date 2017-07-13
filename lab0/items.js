@@ -104,14 +104,20 @@ function ItemDAO(database) {
         }
         */
         // Return all items in category, limiting the number of items returned
-        var pageItems = database.collection("item").find({ "category": category }).limit(itemsPerPage).sort({ "_id": 1 }).skip((page - 1) * itemsPerPage).toArray();
+        var itemFilter = {};
+        if (category != 'All')
+            itemFilter = { "category": category };
+            
+        this.db.collection("item").find(itemFilter).limit(itemsPerPage).sort({ "_id": 1 }).skip((page) * itemsPerPage).toArray( function(err,docs){
+            if (err) throw err;
 
         // TODO-lab1B Replace all code above (in this method).
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the items for the selected page
         // to the callback.
-        callback(pageItems);
+        callback(docs);
+        });
     }
 
 
@@ -119,7 +125,12 @@ function ItemDAO(database) {
         "use strict";
 
         var numItems = 0;
-
+        var itemFilter = {};
+        if (category != 'All')
+            itemFilter = { "category": category };
+        var totalItems = this.db.collection("item").find(itemFilter).count(function(err,totalItems){
+            callback(totalItems);
+        });
         /*
          * TODO-lab1C:
          *
@@ -137,7 +148,6 @@ function ItemDAO(database) {
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the count to the callback.
-        callback(numItems);
     }
 
 
