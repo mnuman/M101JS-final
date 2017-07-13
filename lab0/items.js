@@ -24,9 +24,8 @@ function ItemDAO(database) {
 
     this.db = database;
 
-    this.getCategories = function(callback) {
+    this.getCategories = function (callback) {
         "use strict";
-
         /*
         * TODO-lab1A
         *
@@ -51,34 +50,28 @@ function ItemDAO(database) {
         * to the callback.
         *
         */
+        this.db.collection("item").aggregate([
+            {
+                "$group": {
+                    _id: "$category",
+                    num: { "$sum": 1 }
+                }
+            },
+            { "$sort": { _id: 1 } }
+        ]).toArray(function (err, categories) {
+            assert.equal(null, err);
 
-        var categories = [];
-        var total = 0;
+            var total = 0;
+            for (var i = 0; i < categories.length; i++) {
+                total += categories[i].num;
+            }
 
-        categories = database.collection("item").aggregate( [ {$group : { _id : "$category", num: { $sum:1 } } }, { $sort: { _id: 1 } } ] ).toArray();
-        for (var i = 0; i < categories.length; i++){
-          total += c.num;
-        }
-        console.log(total);
-        var category = {
-            _id: "All",
-            num: total
-        };
-        console.log(category);
-        console.log(categories);
+            categories.unshift({ _id: "All", num: total });
 
-        categories.push(category)
-        // TODO-lab1A Replace all code above (in this method).
-
-        // TODO Include the following line in the appropriate
-        // place within your code to pass the categories array to the
-        // callback.
-        console.log("All categories: " + JSON.stringify(categories));
-        callback(categories);
+            callback(categories);
+        });
     }
-
-
-    this.getItems = function(category, page, itemsPerPage, callback) {
+    this.getItems = function (category, page, itemsPerPage, callback) {
         "use strict";
 
         /*
@@ -111,7 +104,7 @@ function ItemDAO(database) {
         }
         */
         // Return all items in category, limiting the number of items returned
-        var pageItems = database.collection("item").find({"category": category}).limit(itemsPerPage).sort({"_id":1}).skip((page-1)*itemsPerPage).toArray();
+        var pageItems = database.collection("item").find({ "category": category }).limit(itemsPerPage).sort({ "_id": 1 }).skip((page - 1) * itemsPerPage).toArray();
 
         // TODO-lab1B Replace all code above (in this method).
 
@@ -122,7 +115,7 @@ function ItemDAO(database) {
     }
 
 
-    this.getNumItems = function(category, callback) {
+    this.getNumItems = function (category, callback) {
         "use strict";
 
         var numItems = 0;
@@ -142,13 +135,13 @@ function ItemDAO(database) {
          *
          */
 
-         // TODO Include the following line in the appropriate
-         // place within your code to pass the count to the callback.
+        // TODO Include the following line in the appropriate
+        // place within your code to pass the count to the callback.
         callback(numItems);
     }
 
 
-    this.searchItems = function(query, page, itemsPerPage, callback) {
+    this.searchItems = function (query, page, itemsPerPage, callback) {
         "use strict";
 
         /*
@@ -177,7 +170,7 @@ function ItemDAO(database) {
 
         var item = this.createDummyItem();
         var items = [];
-        for (var i=0; i<5; i++) {
+        for (var i = 0; i < 5; i++) {
             items.push(item);
         }
 
@@ -190,7 +183,7 @@ function ItemDAO(database) {
     }
 
 
-    this.getNumSearchItems = function(query, callback) {
+    this.getNumSearchItems = function (query, callback) {
         "use strict";
 
         var numItems = 0;
@@ -212,7 +205,7 @@ function ItemDAO(database) {
     }
 
 
-    this.getItem = function(itemId, callback) {
+    this.getItem = function (itemId, callback) {
         "use strict";
 
         /*
@@ -236,19 +229,19 @@ function ItemDAO(database) {
     }
 
 
-    this.getRelatedItems = function(callback) {
+    this.getRelatedItems = function (callback) {
         "use strict";
 
         this.db.collection("item").find({})
             .limit(4)
-            .toArray(function(err, relatedItems) {
+            .toArray(function (err, relatedItems) {
                 assert.equal(null, err);
                 callback(relatedItems);
             });
     };
 
 
-    this.addReview = function(itemId, comment, name, stars, callback) {
+    this.addReview = function (itemId, comment, name, stars, callback) {
         "use strict";
 
         /*
@@ -282,7 +275,7 @@ function ItemDAO(database) {
     }
 
 
-    this.createDummyItem = function() {
+    this.createDummyItem = function () {
         "use strict";
 
         var item = {
