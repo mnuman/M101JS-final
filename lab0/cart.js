@@ -25,7 +25,7 @@ function CartDAO(database) {
     this.db = database;
 
 
-    this.getCart = function(userId, callback) {
+    this.getCart = function (userId, callback) {
         "use strict";
 
         /*
@@ -37,24 +37,24 @@ function CartDAO(database) {
         * callback function.
         *
         */
+        this.db.collection("cart").find({ "userId": userId }).toArray(function (err, userCarts) {
+            // TODO-lab5 Replace all code above (in this method).
 
-        var userCart = {
-            userId: userId,
-            items: []
-        }
-        var dummyItem = this.createDummyItem();
-        userCart.items.push(dummyItem);
+            // TODO Include the following line in the appropriate
+            // place within your code to pass the userCart to the
+            // callback.
+            if (err)
+                throw err;
+            assert(1, userCarts.length);
 
-        // TODO-lab5 Replace all code above (in this method).
+            callback(userCarts[0]);
 
-        // TODO Include the following line in the appropriate
-        // place within your code to pass the userCart to the
-        // callback.
-        callback(userCart);
+        });
+
     }
 
 
-    this.itemInCart = function(userId, itemId, callback) {
+    this.itemInCart = function (userId, itemId, callback) {
         "use strict";
 
         /*
@@ -81,8 +81,15 @@ function CartDAO(database) {
          * how cart.itemInCart is used in the mongomart.js app.
          *
          */
-
-        callback(null);
+        this.db.collection("cart").find( { "userId" : userId, "items._id": itemId },
+                  { "items.$": 1 }).toArray(function(err,cartItem){
+                      if (err) throw err;
+                      if (cartItem.length==1)
+                        callback(cartItem[0]);
+                      else
+                        callback(null);
+                  });
+        
 
         // TODO-lab6 Replace all code above (in this method).
     }
@@ -106,15 +113,15 @@ function CartDAO(database) {
      * http://mongodb.github.io/node-mongodb-native/2.0/api/Collection.html#findOneAndUpdate
      *
      */
-    this.addItem = function(userId, item, callback) {
+    this.addItem = function (userId, item, callback) {
         "use strict";
 
         // Will update the first document found matching the query document.
         this.db.collection("cart").findOneAndUpdate(
             // query for the cart with the userId passed as a parameter.
-            {userId: userId},
+            { userId: userId },
             // update the user's cart by pushing an item onto the items array
-            {"$push": {items: item}},
+            { "$push": { items: item } },
             // findOneAndUpdate() takes an options document as a parameter.
             // Here we are specifying that the database should insert a cart
             // if one doesn't already exist (i.e. "upsert: true") and that
@@ -127,7 +134,7 @@ function CartDAO(database) {
             },
             // Because we specified "returnOriginal: false", this callback
             // will be passed the updated document as the value of result.
-            function(err, result) {
+            function (err, result) {
                 assert.equal(null, err);
                 // To get the actual document updated we need to access the
                 // value field of the result.
@@ -154,7 +161,7 @@ function CartDAO(database) {
     };
 
 
-    this.updateQuantity = function(userId, itemId, quantity, callback) {
+    this.updateQuantity = function (userId, itemId, quantity, callback) {
         "use strict";
 
         /*
@@ -187,7 +194,7 @@ function CartDAO(database) {
 
     }
 
-    this.createDummyItem = function() {
+    this.createDummyItem = function () {
         "use strict";
 
         var item = {

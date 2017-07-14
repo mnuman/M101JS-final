@@ -107,16 +107,16 @@ function ItemDAO(database) {
         var itemFilter = {};
         if (category != 'All')
             itemFilter = { "category": category };
-            
-        this.db.collection("item").find(itemFilter).limit(itemsPerPage).sort({ "_id": 1 }).skip((page) * itemsPerPage).toArray( function(err,docs){
+
+        this.db.collection("item").find(itemFilter).limit(itemsPerPage).sort({ "_id": 1 }).skip((page) * itemsPerPage).toArray(function (err, docs) {
             if (err) throw err;
 
-        // TODO-lab1B Replace all code above (in this method).
+            // TODO-lab1B Replace all code above (in this method).
 
-        // TODO Include the following line in the appropriate
-        // place within your code to pass the items for the selected page
-        // to the callback.
-        callback(docs);
+            // TODO Include the following line in the appropriate
+            // place within your code to pass the items for the selected page
+            // to the callback.
+            callback(docs);
         });
     }
 
@@ -128,7 +128,7 @@ function ItemDAO(database) {
         var itemFilter = {};
         if (category != 'All')
             itemFilter = { "category": category };
-        var totalItems = this.db.collection("item").find(itemFilter).count(function(err,totalItems){
+        var totalItems = this.db.collection("item").find(itemFilter).count(function (err, totalItems) {
             callback(totalItems);
         });
         /*
@@ -177,19 +177,21 @@ function ItemDAO(database) {
          * description. You should simply do this in the mongo shell.
          *
          */
+        /* Creating a single  index, on multiple columns from the mongoshell:
+        use mongomart
+        db.items.createIndex( { "title" : "text", "slogan" : "text", "description" : "text" } )
+        */
 
-        var item = this.createDummyItem();
-        var items = [];
-        for (var i = 0; i < 5; i++) {
-            items.push(item);
-        }
-
+        this.db.collection("item").find({ $text: { $search: query } }).sort({ _id: 1 }).skip(page * itemsPerPage).limit(itemsPerPage).toArray(function (err, docs) {
+            if (err) 
+                throw err;
+            callback(docs);
+        });
         // TODO-lab2A Replace all code above (in this method).
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the items for the selected page
         // of search results to the callback.
-        callback(items);
     }
 
 
@@ -210,8 +212,11 @@ function ItemDAO(database) {
         * a SINGLE text index on title, slogan, and description. You should
         * simply do this in the mongo shell.
         */
-
-        callback(numItems);
+        this.db.collection("item").find({ $text: { $search: query } }).count(function (err, numItems) {
+            if(err) 
+                throw err;
+            callback(numItems);
+        });
     }
 
 
@@ -227,15 +232,18 @@ function ItemDAO(database) {
          * _id and pass the matching item to the callback function.
          *
          */
-
-        var item = this.createDummyItem();
-
+        this.db.collection("item").find({ "_id" : itemId}).toArray(function(err,docs){
+            if (err) throw err;
+            if ((docs.length)>0)
+                callback(docs[0]);
+            else
+                callback(null);
+        });
         // TODO-lab3 Replace all code above (in this method).
 
         // TODO Include the following line in the appropriate
         // place within your code to pass the matching item
         // to the callback.
-        callback(item);
     }
 
 
@@ -265,23 +273,35 @@ function ItemDAO(database) {
          * "name", "comment", "stars", and "date".
          *
          */
-
         var reviewDoc = {
             name: name,
             comment: comment,
             stars: stars,
             date: Date.now()
-        }
-
+        };
+        console.log("Review document: " + JSON.stringify(reviewDoc));
+        
+        /* Simply push the reviewDoc into the reviews array; the documentation is somewhat ambiguous concerning the 
+         * parameter names; the Mongo Node.js driver documentation specifies a "returnOriginal" parameter, the Mongo 
+         * documentation itself specifies an "returnNewDocument" parameter.
+         * Initially, prefer the Node.js driver dox.
+         */
+        this.db.collection("item").findOneAndUpdate(
+            {  "_id" : itemId},
+            { $push: {reviews: reviewDoc}},
+            { returnOriginal: false },
+            function(err,newDoc){
+                if (err)
+                    throw err;
+                callback(newDoc);
+            }
+        );
         // TODO replace the following two lines with your code that will
         // update the document with a new review.
-        var doc = this.createDummyItem();
-        doc.reviews = [reviewDoc];
-
         // TODO Include the following line in the appropriate
         // place within your code to pass the updated doc to the
         // callback.
-        callback(doc);
+        // callback(doc);
     }
 
 
